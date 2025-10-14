@@ -1,4 +1,4 @@
-export type Todo = { id: number; title: string; done: boolean };
+export type Todo = { id: number; title: string; done: boolean; date: Date };
 let seq = 1;
 const store = new Map<Todo['id'], Todo>();
 /**
@@ -18,7 +18,7 @@ export function listTodos() {
  */
 
 export function createTodo(title: Todo['title']) {
-  const todo = { id: seq++, title, done: false };
+  const todo = { id: seq++, title, done: false, date: new Date() };
   store.set(todo.id, todo);
   return todo;
 }
@@ -60,6 +60,7 @@ export function updateTodo(id: Todo['id'], title: Todo['title']) {
   const todo = store.get(id);
   if (!todo) return;
   todo.title = title;
+  todo.date = new Date();
   return todo;
 }
 /**
