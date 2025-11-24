@@ -1,75 +1,107 @@
-export type Todo = { id: number; title: string; done: boolean; date: Date };
-let seq = 1;
-const store = new Map<Todo['id'], Todo>();
-/**
- * Возвращает массив из всех TODO в сторе.
- *
- * @returns {Todo[]} Список TODO.
- */
-export function listTodos() {
-  return Array.from(store.values());
-}
+// src/services/todos.service.ts
+import { prisma } from '../db/prisma';
 
-/**
- * Создает новый TODO с заданным title и добавляет его в хранилище.
- *
- * @param {string} title - Заголовок TODO.
- * @returns {Todo} Новый TODO.
- */
+import { Category } from './category.service';
 
-export function createTodo(title: Todo['title']) {
-  const todo = { id: seq++, title, done: false, date: new Date() };
-  store.set(todo.id, todo);
+export type Todo = {
+  id: number;
+  title: string;
+  done: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  categoryId: number;
+};
+
+export async function listTodo(): Promise<Todo[]> {
+  const todo = await prisma.todo.findMany({
+    orderBy: { id: 'asc' },
+  });
   return todo;
 }
-/**
- * Переключает TODO с заданным id в противоположное состояние.
- *
- * @param {Todo['id']} id - ID TODO.
- * @returns {Todo | undefined} TODO или undefined, если TODO не найден.
- */
 
-export function toggleTodo(id: Todo['id']) {
-  const todo = store.get(id);
-  if (!todo) return;
-  todo.done = !todo.done;
-  store.set(id, todo);
+export async function createTodo(title: Todo['title'], categoryId: Category['id']) {
+  const todo = (await prisma.todo.create({
+    data: {
+      title,
+      categoryId,
+    },
+  })) as Todo;
   return todo;
 }
-/**
- * Удаляет TODO с заданным id из хранилища.
- *
- * @param {Todo['id']} id - ID TODO.
- * @returns {boolean} true, если TODO был удален, false - в противном случае.
- */
 
-export function deleteTodo(id: Todo['id']) {
-  const todo = store.get(id);
-  store.delete(id);
+export async function toggleTodo(id: Todo['id']) {
+  const found = (await prisma.todo.findUnique({
+    where: {
+      id,
+    },
+  })) as Todo | null;
+  if (!found) {
+    return null;
+  }
+  const todo = (await prisma.todo.update({
+    where: {
+      id,
+    },
+    data: {
+      done: !found.done,
+    },
+  })) as Todo;
   return todo;
 }
-/**
- * Обновляет заголовок TODO с заданным id.
- *
- * @param {Todo['id']} id - ID TODO.
- * @param {Todo['title']} title - Новый заголовок TODO.
- * @returns {Todo | undefined} Обновленный TODO или undefined, если TODO не найден.
- */
 
-export function updateTodo(id: Todo['id'], title: Todo['title']) {
-  const todo = store.get(id);
-  if (!todo) return;
-  todo.title = title;
-  todo.date = new Date();
+export async function removeTodo(id: Todo['id']) {
+  const found = (await prisma.todo.findUnique({
+    where: {
+      id,
+    },
+  })) as Todo | null;
+  if (!found) {
+    return null;
+  }
+  const todo = (await prisma.todo.delete({
+    where: {
+      id,
+    },
+  })) as Todo;
   return todo;
 }
-/**
- * Возвращает TODO с заданным id или undefined, если TODO не найден.
- *
- * @param {Todo['id']} id - ID TODO.
- * @returns {Todo | undefined} TODO или undefined, если TODO не найден.
- */
 
-export function getTodo(id: Todo['id']) {
-  return store.get(id);
+export async function updateTodo(id: Todo['id'], title: Todo['title'], categoryId: Category['id']) {
+  const found = (await prisma.todo.findUnique({
+    where: {
+      id,
+    },
+  })) as Todo | null;
+  if (!found) {
+    return null;
+  }
+  const todo = (await prisma.todo.update({
+    where: {
+      id,
+    },
+    data: {
+      title,
+      categoryId,
+    },
+  })) as Todo;
+  return todo;
+}
+
+export async function getTodo(id: Todo['id']) {
+  const found = (await prisma.todo.findUnique({
+    where: {
+      id,
+    },
+  })) as Todo | null;
+  if (!found) {
+    return null;
+  }
+  return {
+    id: found.id,
+    title: found.title,
+    done: found.done,
+    created_at: found.createdAt,
+    updated_at: found.updatedAt,
+    category_id: found.categoryId,
+  };
 }

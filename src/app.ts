@@ -11,7 +11,7 @@ export function buildApp() {
   app.use(express.json());
   // Роуты
   app.use('/health', healthRouter);
-  app.use('/api/todos', todosRouter);
+  app.use('/todos', todosRouter);
   app.use('/category', categoryRouter);
   // 404
   app.use((req, res) => res.status(404).json({ error: 'Not Found' }));

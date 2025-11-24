@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Todo {
+  id         Int      @id @default(autoincrement())
+  title      String   @db.VarChar(255)
+  done       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int      @map("category_id")
+
+  @@map("todo")
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  title  String @unique @db.VarChar(32)
+  color String @db.VarChar(7)
+  todos Todo[]
+
+  @@map("categories")
+}
